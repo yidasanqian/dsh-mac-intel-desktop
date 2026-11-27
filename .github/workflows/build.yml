@@ -1,0 +1,143 @@
+name: Build macOS Intel DMG
+
+# 从官方 deepseek-ai/deepseek-harness 的 tag 构建 macOS x86_64 桌面版，发布到本仓库 Release。
+# 产物未签名、未公证（ad-hoc 签名），只提供 dmg，不含 Electron 自动更新通道。
+
+on:
+  workflow_dispatch:
+    inputs:
+      source_ref:
+        description: '上游源码 ref；留空则自动取最新 dsh-v* tag'
+        required: false
+        default: ''
+  schedule:
+    # 每天 20:00 UTC / 次日 04:00 北京时间，检查上游是否有新 tag
+    - cron: '0 20 * * *'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: build-intel
+  cancel-in-progress: false
+
+env:
+  UPSTREAM_REPO: deepseek-ai/deepseek-harness
+  DSH_DESKTOP_TARGET_PLATFORM: darwin
+  DSH_DESKTOP_TARGET_ARCH: x64
+
+jobs:
+  resolve:
+    runs-on: ubuntu-24.04
+    outputs:
+      ref: ${{ steps.pick.outputs.ref }}
+      version: ${{ steps.pick.outputs.version }}
+      skip: ${{ steps.pick.outputs.skip }}
+    steps:
+      - name: 选择上游版本
+        id: pick
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          ref="${{ inputs.source_ref }}"
+          if [ -z "$ref" ]; then
+            # 按发布时间的倒序取第一个 dsh-v* tag
+            ref=$(gh api "repos/${UPSTREAM_REPO}/releases?per_page=30" \
+              --jq '[.[] | select(.tag_name | startswith("dsh-v"))][0].tag_name')
+          fi
+          test -n "$ref" || { echo '未能解析上游 tag'; exit 1; }
+          version="${ref#dsh-v}"
+          echo "ref=$ref" >> "$GITHUB_OUTPUT"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "上游版本：$ref"
+          if gh release view "intel-v${version}" --repo "${{ github.repository }}" >/dev/null 2>&1; then
+            echo "intel-v${version} 已存在，跳过构建"
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+
+  build:
+    needs: resolve
+    if: needs.resolve.outputs.skip != 'true'
+    runs-on: macos-15-intel
+    timeout-minutes: 360
+    steps:
+      - name: 环境与磁盘
+        run: |
+          sw_vers
+          uname -m
+          df -h /
+
+      - name: 检出上游源码
+        uses: actions/checkout@v5
+        with:
+          repository: deepseek-ai/deepseek-harness
+          ref: ${{ needs.resolve.outputs.ref }}
+          path: src
+          fetch-depth: 0
+          persist-credentials: false
+
+      - uses: pnpm/action-setup@v5
+        with:
+          package_json_file: src/package.json
+          run_install: false
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '24.22.3'
+          cache: pnpm
+          cache-dependency-path: src/pnpm-lock.yaml
+
+      - name: 安装依赖
+        working-directory: src
+        run: pnpm install --frozen-lockfile
+
+      - name: 磁盘（安装后）
+        run: df -h /
+
+      - name: 构建未签名 x64 dmg
+        working-directory: src
+        run: pnpm run package:desktop:mac:x64:unsigned
+
+      - name: 磁盘（构建后）
+        if: always()
+        run: df -h /
+
+      - name: 收集打包日志
+        if: always()
+        uses: actions/upload-artifact@v5
+        with:
+          name: packaging-logs-${{ github.run_id }}
+          path: src/apps/desktop/.desktop-build/**/events.jsonl
+          if-no-files-found: ignore
+          retention-days: 7
+
+      - name: 规整产物
+        id: stage
+        run: |
+          set -euo pipefail
+          dmg=$(find src -type f -name '*.dmg' -not -path '*/node_modules/*' | head -n 1)
+          test -n "$dmg" || { echo '未产出 dmg'; exit 1; }
+          mkdir -p out
+          cp "$dmg" out/dsh-intel-latest.dmg
+          version=$(node -p "require('./src/package.json').version")
+          printf '%s\n' "$version" > out/version.txt
+          ( cd out && shasum -a 256 dsh-intel-latest.dmg > SHA256SUMS.txt )
+          ls -lh out
+          cat out/SHA256SUMS.txt
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+      - name: 发布 Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.stage.outputs.version }}
+          UPSTREAM_REF: ${{ needs.resolve.outputs.ref }}
+        run: |
+          set -euo pipefail
+          gh release create "intel-v${VERSION}" \
+            out/dsh-intel-latest.dmg out/version.txt out/SHA256SUMS.txt \
+            --repo "${{ github.repository }}" \
+            --title "DSH ${VERSION} · macOS Intel（未签名）" \
+            --notes "由上游 ${UPSTREAM_REF} 源码在 GitHub Actions macos-15-intel 上构建。安装：下载 dsh-intel-latest.dmg，双击挂载，把 DeepSeek Harness.app 拖进「应用程序」；首次打开前执行 sudo xattr -dr com.apple.quarantine \"/Applications/DeepSeek Harness.app\"。未签名、未公证（ad-hoc 签名），不支持 Electron 内置自动更新，请用 updater/dsh-intel-update.sh 更新，SHA256 见 SHA256SUMS.txt。"
