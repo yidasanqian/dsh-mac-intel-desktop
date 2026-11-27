@@ -32,6 +32,7 @@ jobs:
     outputs:
       ref: ${{ steps.pick.outputs.ref }}
       version: ${{ steps.pick.outputs.version }}
+      sha: ${{ steps.pick.outputs.sha }}
       skip: ${{ steps.pick.outputs.skip }}
     steps:
       - name: 选择上游版本
@@ -48,9 +49,13 @@ jobs:
           fi
           test -n "$ref" || { echo '未能解析上游 tag'; exit 1; }
           version="${ref#dsh-v}"
+          # 解析成 commit SHA：tag 是可移动引用，构建溯源只认 SHA
+          sha=$(gh api "repos/${UPSTREAM_REPO}/commits/${ref}" --jq .sha)
+          test -n "$sha" || { echo '未能解析上游 commit'; exit 1; }
           echo "ref=$ref" >> "$GITHUB_OUTPUT"
           echo "version=$version" >> "$GITHUB_OUTPUT"
-          echo "上游版本：$ref"
+          echo "sha=$sha" >> "$GITHUB_OUTPUT"
+          echo "上游版本：$ref@$sha"
           if gh release view "intel-v${version}" --repo "${{ github.repository }}" >/dev/null 2>&1; then
             echo "intel-v${version} 已存在，跳过构建"
             echo "skip=true" >> "$GITHUB_OUTPUT"
@@ -116,17 +121,30 @@ jobs:
 
       - name: 规整产物
         id: stage
+        env:
+          UPSTREAM_REF: ${{ needs.resolve.outputs.ref }}
+          UPSTREAM_SHA: ${{ needs.resolve.outputs.sha }}
         run: |
           set -euo pipefail
           dmg=$(find src -type f -name '*.dmg' -not -path '*/node_modules/*' | head -n 1)
           test -n "$dmg" || { echo '未产出 dmg'; exit 1; }
+          # 构建溯源：checkout 的实际 commit 必须和 resolve 解析的 SHA 一致
+          built_sha=$(git -C src rev-parse HEAD)
+          test "$built_sha" = "$UPSTREAM_SHA" || {
+            echo "源码 commit 与解析结果不一致：${built_sha} != ${UPSTREAM_SHA}"; exit 1; }
           mkdir -p out
           cp "$dmg" out/dsh-intel-latest.dmg
           version=$(node -p "require('./src/package.json').version")
           printf '%s\n' "$version" > out/version.txt
+          {
+            echo "upstream_repo=${UPSTREAM_REPO}"
+            echo "upstream_ref=${UPSTREAM_REF}"
+            echo "upstream_sha=${UPSTREAM_SHA}"
+            echo "build_run=https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          } > out/source.txt
           ( cd out && shasum -a 256 dsh-intel-latest.dmg > SHA256SUMS.txt )
           ls -lh out
-          cat out/SHA256SUMS.txt
+          cat out/SHA256SUMS.txt out/source.txt
           echo "version=$version" >> "$GITHUB_OUTPUT"
 
       - name: 发布 Release
@@ -134,10 +152,11 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           VERSION: ${{ steps.stage.outputs.version }}
           UPSTREAM_REF: ${{ needs.resolve.outputs.ref }}
+          UPSTREAM_SHA: ${{ needs.resolve.outputs.sha }}
         run: |
           set -euo pipefail
           gh release create "intel-v${VERSION}" \
-            out/dsh-intel-latest.dmg out/version.txt out/SHA256SUMS.txt \
+            out/dsh-intel-latest.dmg out/version.txt out/SHA256SUMS.txt out/source.txt \
             --repo "${{ github.repository }}" \
             --title "DSH ${VERSION} · macOS Intel（未签名）" \
-            --notes "由上游 ${UPSTREAM_REF} 源码在 GitHub Actions macos-15-intel 上构建。安装：下载 dsh-intel-latest.dmg，双击挂载，把 DeepSeek Harness.app 拖进「应用程序」；首次打开前执行 sudo xattr -dr com.apple.quarantine \"/Applications/DeepSeek Harness.app\"。未签名、未公证（ad-hoc 签名），不支持 Electron 内置自动更新，请用 updater/dsh-intel-update.sh 更新，SHA256 见 SHA256SUMS.txt。"
+            --notes "由上游 ${UPSTREAM_REPO} 的 ${UPSTREAM_REF}（commit ${UPSTREAM_SHA}）源码在 GitHub Actions macos-15-intel 上构建，溯源信息见 source.txt。安装：下载 dsh-intel-latest.dmg，双击挂载，把 DeepSeek Harness.app 拖进「应用程序」；首次打开前执行 sudo xattr -dr com.apple.quarantine \"/Applications/DeepSeek Harness.app\"。未签名、未公证（ad-hoc 签名），不支持 Electron 内置自动更新，请用 updater/dsh-intel-update.sh 更新，SHA256 见 SHA256SUMS.txt。"

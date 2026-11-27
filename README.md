@@ -57,6 +57,7 @@ cd dsh-intel-desktop
 - 跟随上游 `dsh-v*` tag，包含 `-rc` / `-alpha` 预发布版本（上游目前只发这类）
 - 每天 20:00 UTC 自动检查上游新 tag，有新版就构建并发布 `intel-v<版本>`
 - Release 里的 `version.txt` 就是上游 `package.json` 的版本号，和 app 的 `CFBundleShortVersionString` 一致
+- 每个 Release 附 `source.txt`：上游 repo、tag、解析后的 commit SHA、本次构建的 run 链接。tag 名里的版本号对齐上游，但 git tag 指向本仓库，不导入上游历史
 - 上游发新版到这里的包出现，通常延迟 1–2 小时（构建耗时）
 
 ## 构建
