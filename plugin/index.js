@@ -38,7 +38,6 @@ const APP_NAME = 'DeepSeek Harness'
 const APP_PATH = `/Applications/${APP_NAME}.app`
 const RELEASE_VERSION_PREFIX = 'intel-v'
 const DMG_NAME = 'dsh-mac-intel-latest.dmg'
-const LEGACY_DMG_NAME = 'dsh-intel-latest.dmg'
 const LATEST_BASE = `https://github.com/${REPO}/releases/latest/download`
 const API_RELEASES = `https://api.github.com/repos/${REPO}/releases?per_page=10`
 const UA = 'dsh-mac-intel-update/0.1.0'
@@ -229,7 +228,7 @@ function releaseFromApi(release) {
   const version = tag.slice(RELEASE_VERSION_PREFIX.length)
   if (version === '') return null
   const assets = Array.isArray(release.assets) ? release.assets : []
-  const dmg = assets.find(asset => asset?.name === DMG_NAME) ?? assets.find(asset => asset?.name === LEGACY_DMG_NAME)
+  const dmg = assets.find(asset => asset?.name === DMG_NAME)
   if (dmg === undefined || typeof dmg.browser_download_url !== 'string') return null
   const sums = assets.find(asset => asset?.name === 'SHA256SUMS.txt')
   return {

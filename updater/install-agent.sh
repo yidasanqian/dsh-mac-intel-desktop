@@ -7,22 +7,13 @@ set -euo pipefail
 
 LABEL="com.yidasanqian.dsh-mac-intel-watch"
 PLIST="${HOME}/Library/LaunchAgents/${LABEL}.plist"
-# 旧标签（仓库改名前的 dsh-intel-watch），安装/卸载时一并清掉
-LEGACY_LABEL="com.yidasanqian.dsh-intel-watch"
-LEGACY_PLIST="${HOME}/Library/LaunchAgents/${LEGACY_LABEL}.plist"
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 WATCH="${DIR}/dsh-mac-intel-watch.sh"
 STATE_DIR="${HOME}/.dsh-mac-intel-desktop"
 
-drop_legacy() {
-  launchctl bootout "gui/$(id -u)/${LEGACY_LABEL}" >/dev/null 2>&1 || true
-  rm -f "$LEGACY_PLIST"
-}
-
 if [ "${1:-}" = "--uninstall" ]; then
   launchctl bootout "gui/$(id -u)/${LABEL}" >/dev/null 2>&1 || true
   rm -f "$PLIST"
-  drop_legacy
   echo "已卸载 ${LABEL}"
   exit 0
 fi

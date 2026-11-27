@@ -41,8 +41,6 @@ chmod +x /tmp/dsh-mac-intel-update.sh && /tmp/dsh-mac-intel-update.sh
 
 What it does: reads `version.txt` from the latest release, compares it against `CFBundleShortVersionString` of `/Applications/DeepSeek Harness.app`, and on mismatch downloads the DMG, verifies SHA256, mounts, quits the running app, swaps the bundle, then clears quarantine.
 
-The artifact name follows the repo: `dsh-mac-intel-latest.dmg`. Releases published before the repo rename use `dsh-intel-latest.dmg`; the script falls back to it automatically.
-
 ### Desktop plugin (recommended)
 
 If you would rather not use a terminal, this repo ships a DSH plugin that puts the updater in **Settings → General**:

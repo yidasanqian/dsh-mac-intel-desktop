@@ -41,8 +41,6 @@ chmod +x /tmp/dsh-mac-intel-update.sh && /tmp/dsh-mac-intel-update.sh
 
 脚本做的事：读最新 Release 的 `version.txt`，和 `/Applications/DeepSeek Harness.app` 的 `CFBundleShortVersionString` 比对，有差异就下载 dmg、校验 SHA256、挂载、退出正在运行的 app、替换 bundle、清 quarantine。
 
-产物名跟随仓库：`dsh-mac-intel-latest.dmg`。仓库改名之前发布的旧 Release 里叫 `dsh-intel-latest.dmg`，脚本会自动兜底，不用手动处理。
-
 ### 桌面端插件（推荐）
 
 不想开终端的话，这个仓库带一个 DSH 插件，把更新入口放进 **设置 → 通用**：

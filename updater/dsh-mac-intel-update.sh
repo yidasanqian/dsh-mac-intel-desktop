@@ -14,8 +14,6 @@ APP_NAME="DeepSeek Harness"
 APP_PATH="/Applications/${APP_NAME}.app"
 BASE="https://github.com/${REPO}/releases/latest/download"
 ASSET="dsh-mac-intel-latest.dmg"
-# 早于仓库改名的 Release 用的是旧产物名，保留兜底
-LEGACY_ASSET="dsh-intel-latest.dmg"
 STATE_DIR="${HOME}/.dsh-mac-intel-desktop"
 STATE_FILE="${STATE_DIR}/state.env"
 
@@ -89,18 +87,11 @@ cleanup() {
 trap cleanup EXIT
 
 log '下载 dmg…'
-got=0
-for name in "$ASSET" "$LEGACY_ASSET"; do
-  if curl -fL --progress-bar --max-time 1800 -o "$DMG" "${BASE}/${name}"; then
-    got=1
-    break
-  fi
-done
-[ "$got" -eq 1 ] || die '下载失败'
+curl -fL --progress-bar --max-time 1800 -o "$DMG" "${BASE}/${ASSET}" || die '下载失败'
 
 log '校验 SHA256…'
 if curl -fsSL --max-time 20 -o "${WORK}/SHA256SUMS.txt" "${BASE}/SHA256SUMS.txt"; then
-  # 按哈希比对，不依赖文件名——产物改过名也能校验
+  # 按哈希比对，不依赖文件名
   expected="$(awk 'length($1) == 64 { print $1; exit }' "${WORK}/SHA256SUMS.txt")"
   actual="$(shasum -a 256 "$DMG" | awk '{ print $1 }')"
   [ -n "$expected" ] || die 'SHA256SUMS.txt 内容无法解析'
