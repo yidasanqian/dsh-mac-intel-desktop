@@ -10,7 +10,7 @@ The upstream [deepseek-ai/deepseek-harness](https://github.com/deepseek-ai/deeps
 
 ## Install
 
-1. Grab `dsh-intel-latest.dmg` from [Releases](https://github.com/yidasanqian/dsh-mac-intel-desktop/releases/latest)
+1. Grab `dsh-mac-intel-latest.dmg` from [Releases](https://github.com/yidasanqian/dsh-mac-intel-desktop/releases/latest)
 2. Mount it and drag `DeepSeek Harness.app` into `/Applications`
 3. Strip the quarantine flag before the first launch (the bundle is ad-hoc signed, Gatekeeper blocks it otherwise):
 
@@ -32,14 +32,16 @@ The bundle is not signed with an Apple Developer certificate, so Electron's buil
 
 ```sh
 # check and install (interactive confirmation)
-curl -fsSL https://raw.githubusercontent.com/yidasanqian/dsh-mac-intel-desktop/main/updater/dsh-intel-update.sh -o /tmp/dsh-intel-update.sh
-chmod +x /tmp/dsh-intel-update.sh && /tmp/dsh-intel-update.sh
+curl -fsSL https://raw.githubusercontent.com/yidasanqian/dsh-mac-intel-desktop/main/updater/dsh-mac-intel-update.sh -o /tmp/dsh-mac-intel-update.sh
+chmod +x /tmp/dsh-mac-intel-update.sh && /tmp/dsh-mac-intel-update.sh
 
 # check only, no download
-/tmp/dsh-intel-update.sh --check
+/tmp/dsh-mac-intel-update.sh --check
 ```
 
 What it does: reads `version.txt` from the latest release, compares it against `CFBundleShortVersionString` of `/Applications/DeepSeek Harness.app`, and on mismatch downloads the DMG, verifies SHA256, mounts, quits the running app, swaps the bundle, then clears quarantine.
+
+The artifact name follows the repo: `dsh-mac-intel-latest.dmg`. Releases published before the repo rename use `dsh-intel-latest.dmg`; the script falls back to it automatically.
 
 To get a daily reminder (notify only — no silent `sudo` installs):
 
@@ -69,7 +71,7 @@ macos-15-intel runner
   → checkout upstream tag
   → pnpm install --frozen-lockfile
   → pnpm run package:desktop:mac:x64:unsigned
-  → rename the DMG to dsh-intel-latest.dmg
+  → rename the DMG to dsh-mac-intel-latest.dmg
   → publish release (with version.txt / SHA256SUMS.txt)
 ```
 

@@ -133,7 +133,7 @@ jobs:
           test "$built_sha" = "$UPSTREAM_SHA" || {
             echo "源码 commit 与解析结果不一致：${built_sha} != ${UPSTREAM_SHA}"; exit 1; }
           mkdir -p out
-          cp "$dmg" out/dsh-intel-latest.dmg
+          cp "$dmg" out/dsh-mac-intel-latest.dmg
           version=$(node -p "require('./src/package.json').version")
           printf '%s\n' "$version" > out/version.txt
           {
@@ -142,7 +142,7 @@ jobs:
             echo "upstream_sha=${UPSTREAM_SHA}"
             echo "build_run=https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
           } > out/source.txt
-          ( cd out && shasum -a 256 dsh-intel-latest.dmg > SHA256SUMS.txt )
+          ( cd out && shasum -a 256 dsh-mac-intel-latest.dmg > SHA256SUMS.txt )
           ls -lh out
           cat out/SHA256SUMS.txt out/source.txt
           echo "version=$version" >> "$GITHUB_OUTPUT"
@@ -156,7 +156,7 @@ jobs:
         run: |
           set -euo pipefail
           gh release create "intel-v${VERSION}" \
-            out/dsh-intel-latest.dmg out/version.txt out/SHA256SUMS.txt out/source.txt \
+            out/dsh-mac-intel-latest.dmg out/version.txt out/SHA256SUMS.txt out/source.txt \
             --repo "${{ github.repository }}" \
-            --title "DSH ${VERSION} · macOS Intel（未签名）" \
-            --notes "由上游 ${UPSTREAM_REPO} 的 ${UPSTREAM_REF}（commit ${UPSTREAM_SHA}）源码在 GitHub Actions macos-15-intel 上构建，溯源信息见 source.txt。安装：下载 dsh-intel-latest.dmg，双击挂载，把 DeepSeek Harness.app 拖进「应用程序」；首次打开前执行 sudo xattr -dr com.apple.quarantine \"/Applications/DeepSeek Harness.app\"。未签名、未公证（ad-hoc 签名），不支持 Electron 内置自动更新，请用 updater/dsh-intel-update.sh 更新，SHA256 见 SHA256SUMS.txt。"
+            --title "DSH ${VERSION} · Mac Intel（未签名）" \
+            --notes "由上游 ${UPSTREAM_REPO} 的 ${UPSTREAM_REF}（commit ${UPSTREAM_SHA}）源码在 GitHub Actions macos-15-intel 上构建，溯源信息见 source.txt。安装：下载 dsh-mac-intel-latest.dmg，双击挂载，把 DeepSeek Harness.app 拖进「应用程序」；首次打开前执行 sudo xattr -dr com.apple.quarantine \"/Applications/DeepSeek Harness.app\"。未签名、未公证（ad-hoc 签名），不支持 Electron 内置自动更新，请用 updater/dsh-intel-update.sh 更新，SHA256 见 SHA256SUMS.txt。"

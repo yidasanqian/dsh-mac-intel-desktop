@@ -10,7 +10,7 @@
 
 ## 下载安装
 
-1. 打开 [Releases](https://github.com/yidasanqian/dsh-mac-intel-desktop/releases/latest)，下载 `dsh-intel-latest.dmg`
+1. 打开 [Releases](https://github.com/yidasanqian/dsh-mac-intel-desktop/releases/latest)，下载 `dsh-mac-intel-latest.dmg`
 2. 双击挂载，把 `DeepSeek Harness.app` 拖进「应用程序」
 3. 首次打开前清掉隔离属性（包是 ad-hoc 签名，不清会被 Gatekeeper 拦）：
 
@@ -32,14 +32,16 @@ shasum -a 256 -c SHA256SUMS.txt
 
 ```sh
 # 检查并安装（交互确认）
-curl -fsSL https://raw.githubusercontent.com/yidasanqian/dsh-mac-intel-desktop/main/updater/dsh-intel-update.sh -o /tmp/dsh-intel-update.sh
-chmod +x /tmp/dsh-intel-update.sh && /tmp/dsh-intel-update.sh
+curl -fsSL https://raw.githubusercontent.com/yidasanqian/dsh-mac-intel-desktop/main/updater/dsh-mac-intel-update.sh -o /tmp/dsh-mac-intel-update.sh
+chmod +x /tmp/dsh-mac-intel-update.sh && /tmp/dsh-mac-intel-update.sh
 
 # 只检查，不下载
-/tmp/dsh-intel-update.sh --check
+/tmp/dsh-mac-intel-update.sh --check
 ```
 
 脚本做的事：读最新 Release 的 `version.txt`，和 `/Applications/DeepSeek Harness.app` 的 `CFBundleShortVersionString` 比对，有差异就下载 dmg、校验 SHA256、挂载、退出正在运行的 app、替换 bundle、清 quarantine。
+
+产物名跟随仓库：`dsh-mac-intel-latest.dmg`。仓库改名之前发布的旧 Release 里叫 `dsh-intel-latest.dmg`，脚本会自动兜底，不用手动处理。
 
 想让它每天自动提醒（不自动装，避免 sudo 静默提权）：
 
@@ -69,7 +71,7 @@ macos-15-intel runner
   → checkout 上游 tag
   → pnpm install --frozen-lockfile
   → pnpm run package:desktop:mac:x64:unsigned
-  → 产出 dmg，重命名为 dsh-intel-latest.dmg
+  → 产出 dmg，重命名为 dsh-mac-intel-latest.dmg
   → 发布 Release（含 version.txt / SHA256SUMS.txt）
 ```
 

@@ -5,20 +5,30 @@
 #   ./install-agent.sh --uninstall  卸载
 set -euo pipefail
 
-LABEL="com.yidasanqian.dsh-intel-watch"
+LABEL="com.yidasanqian.dsh-mac-intel-watch"
 PLIST="${HOME}/Library/LaunchAgents/${LABEL}.plist"
+# 旧标签（仓库改名前的 dsh-intel-watch），安装/卸载时一并清掉
+LEGACY_LABEL="com.yidasanqian.dsh-intel-watch"
+LEGACY_PLIST="${HOME}/Library/LaunchAgents/${LEGACY_LABEL}.plist"
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-WATCH="${DIR}/dsh-intel-watch.sh"
+WATCH="${DIR}/dsh-mac-intel-watch.sh"
+STATE_DIR="${HOME}/.dsh-mac-intel-desktop"
+
+drop_legacy() {
+  launchctl bootout "gui/$(id -u)/${LEGACY_LABEL}" >/dev/null 2>&1 || true
+  rm -f "$LEGACY_PLIST"
+}
 
 if [ "${1:-}" = "--uninstall" ]; then
   launchctl bootout "gui/$(id -u)/${LABEL}" >/dev/null 2>&1 || true
   rm -f "$PLIST"
+  drop_legacy
   echo "已卸载 ${LABEL}"
   exit 0
 fi
 
-chmod +x "${DIR}/dsh-intel-update.sh" "$WATCH"
-mkdir -p "${HOME}/Library/LaunchAgents"
+chmod +x "${DIR}/dsh-mac-intel-update.sh" "$WATCH"
+mkdir -p "${HOME}/Library/LaunchAgents" "$STATE_DIR"
 
 cat > "$PLIST" <<PLIST_EOF
 <?xml version="1.0" encoding="UTF-8"?>
@@ -47,16 +57,17 @@ cat > "$PLIST" <<PLIST_EOF
   <key>RunAtLoad</key>
   <false/>
   <key>StandardOutPath</key>
-  <string>${HOME}/.dsh-intel-desktop/watch.log</string>
+  <string>${STATE_DIR}/watch.log</string>
   <key>StandardErrorPath</key>
-  <string>${HOME}/.dsh-intel-desktop/watch.log</string>
+  <string>${STATE_DIR}/watch.log</string>
 </dict>
 </plist>
 PLIST_EOF
 
+drop_legacy
 launchctl bootout "gui/$(id -u)/${LABEL}" >/dev/null 2>&1 || true
 launchctl bootstrap "gui/$(id -u)" "$PLIST"
 launchctl enable "gui/$(id -u)/${LABEL}" >/dev/null 2>&1 || true
 
 echo "已安装 ${LABEL}，每天 19:00 检查一次"
-echo "立即试跑一次：bash ${WATCH} && cat ${HOME}/.dsh-intel-desktop/state.env"
+echo "立即试跑一次：bash ${WATCH} && cat ${STATE_DIR}/state.env"

@@ -3,9 +3,9 @@
 set -uo pipefail
 
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-STATE_FILE="${HOME}/.dsh-intel-desktop/state.env"
+STATE_FILE="${HOME}/.dsh-mac-intel-desktop/state.env"
 
-"${DIR}/dsh-intel-update.sh" --check --quiet
+"${DIR}/dsh-mac-intel-update.sh" --check --quiet
 code=$?
 
 if [ "$code" -eq 10 ]; then
@@ -17,7 +17,7 @@ if [ "$code" -eq 10 ]; then
     local_ver="${local:-未安装}"
     remote_ver="${remote:-未知}"
   fi
-  osascript -e "display notification \"${local_ver} → ${remote_ver}，运行 dsh-intel-update.sh 更新\" with title \"DSH Intel 有新版本\" sound name \"Glass\"" >/dev/null 2>&1 || true
+  osascript -e "display notification \"${local_ver} → ${remote_ver}，运行 dsh-mac-intel-update.sh 更新\" with title \"DSH Mac Intel 有新版本\" sound name \"Glass\"" >/dev/null 2>&1 || true
 fi
 
 exit 0

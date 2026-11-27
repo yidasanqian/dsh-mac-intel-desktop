@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 # dsh-mac-intel-desktop 更新器（Mac Intel / 未签名构建专用）
 #
-#   ./dsh-intel-update.sh            检查并安装最新版（交互确认）
-#   ./dsh-intel-update.sh --check    只检查，不下载
-#   ./dsh-intel-update.sh --quiet    静默模式，供 LaunchAgent 调用
-#   ./dsh-intel-update.sh --yes      跳过确认，直接安装
+#   ./dsh-mac-intel-update.sh            检查并安装最新版（交互确认）
+#   ./dsh-mac-intel-update.sh --check    只检查，不下载
+#   ./dsh-mac-intel-update.sh --quiet    静默模式，供 LaunchAgent 调用
+#   ./dsh-mac-intel-update.sh --yes      跳过确认，直接安装
 #
 # 退出码：0 已是最新或安装成功，10 有新版本（仅 --check），1 出错
 set -euo pipefail
@@ -13,7 +13,10 @@ REPO="yidasanqian/dsh-mac-intel-desktop"
 APP_NAME="DeepSeek Harness"
 APP_PATH="/Applications/${APP_NAME}.app"
 BASE="https://github.com/${REPO}/releases/latest/download"
-STATE_DIR="${HOME}/.dsh-intel-desktop"
+ASSET="dsh-mac-intel-latest.dmg"
+# 早于仓库改名的 Release 用的是旧产物名，保留兜底
+LEGACY_ASSET="dsh-intel-latest.dmg"
+STATE_DIR="${HOME}/.dsh-mac-intel-desktop"
 STATE_FILE="${STATE_DIR}/state.env"
 
 CHECK_ONLY=0
@@ -75,9 +78,9 @@ if [ "$ASSUME_YES" -eq 0 ]; then
   case "$reply" in y|Y|yes|YES) ;; *) log '已取消'; exit 0 ;; esac
 fi
 
-WORK="$(mktemp -d "${TMPDIR:-/tmp}/dsh-intel.XXXXXX")"
+WORK="$(mktemp -d "${TMPDIR:-/tmp}/dsh-mac-intel.XXXXXX")"
 MNT="${WORK}/mnt"
-DMG="${WORK}/dsh-intel-latest.dmg"
+DMG="${WORK}/${ASSET}"
 MOUNTED=0
 cleanup() {
   [ "$MOUNTED" -eq 1 ] && hdiutil detach "$MNT" -quiet -force >/dev/null 2>&1 || true
@@ -86,11 +89,22 @@ cleanup() {
 trap cleanup EXIT
 
 log '下载 dmg…'
-curl -fL --progress-bar --max-time 1800 -o "$DMG" "${BASE}/dsh-intel-latest.dmg" || die '下载失败'
+got=0
+for name in "$ASSET" "$LEGACY_ASSET"; do
+  if curl -fL --progress-bar --max-time 1800 -o "$DMG" "${BASE}/${name}"; then
+    got=1
+    break
+  fi
+done
+[ "$got" -eq 1 ] || die '下载失败'
 
 log '校验 SHA256…'
 if curl -fsSL --max-time 20 -o "${WORK}/SHA256SUMS.txt" "${BASE}/SHA256SUMS.txt"; then
-  ( cd "$WORK" && shasum -a 256 -c SHA256SUMS.txt ) || die 'SHA256 校验不通过，已中止'
+  # 按哈希比对，不依赖文件名——产物改过名也能校验
+  expected="$(awk 'length($1) == 64 { print $1; exit }' "${WORK}/SHA256SUMS.txt")"
+  actual="$(shasum -a 256 "$DMG" | awk '{ print $1 }')"
+  [ -n "$expected" ] || die 'SHA256SUMS.txt 内容无法解析'
+  [ "$expected" = "$actual" ] || die "SHA256 校验不通过（期望 ${expected}，实际 ${actual}），已中止"
 else
   log '远端未提供 SHA256SUMS.txt，跳过校验'
 fi
