@@ -1,8 +1,8 @@
-# dsh-intel-desktop
+# dsh-mac-intel-desktop
 
 **中文** | [English](README.en.md)
 
-给 **Intel Mac**（x86_64）用的 DSH 桌面版构建与分发。
+**DSH Mac Desktop · Intel（x86_64）版** — 给 **Mac Intel** 机器用的 [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness)（DSH）桌面版构建与分发，附轻量更新器。
 
 上游 [deepseek-ai/deepseek-harness](https://github.com/deepseek-ai/deepseek-harness) 官方桌面版只发 `macos-arm64.dmg`，官网下载页对 Intel 机型直接提示「Intel 芯片暂不支持」。这个仓库做一件事：从上游源码 tag 在 GitHub Actions 的 Intel 机器上构建 x86_64 包，发布到这里，并配一个轻量更新器。
 
@@ -10,7 +10,7 @@
 
 ## 下载安装
 
-1. 打开 [Releases](https://github.com/yidasanqian/dsh-intel-desktop/releases/latest)，下载 `dsh-intel-latest.dmg`
+1. 打开 [Releases](https://github.com/yidasanqian/dsh-mac-intel-desktop/releases/latest)，下载 `dsh-intel-latest.dmg`
 2. 双击挂载，把 `DeepSeek Harness.app` 拖进「应用程序」
 3. 首次打开前清掉隔离属性（包是 ad-hoc 签名，不清会被 Gatekeeper 拦）：
 
@@ -32,7 +32,7 @@ shasum -a 256 -c SHA256SUMS.txt
 
 ```sh
 # 检查并安装（交互确认）
-curl -fsSL https://raw.githubusercontent.com/yidasanqian/dsh-intel-desktop/main/updater/dsh-intel-update.sh -o /tmp/dsh-intel-update.sh
+curl -fsSL https://raw.githubusercontent.com/yidasanqian/dsh-mac-intel-desktop/main/updater/dsh-intel-update.sh -o /tmp/dsh-intel-update.sh
 chmod +x /tmp/dsh-intel-update.sh && /tmp/dsh-intel-update.sh
 
 # 只检查，不下载
@@ -44,8 +44,8 @@ chmod +x /tmp/dsh-intel-update.sh && /tmp/dsh-intel-update.sh
 想让它每天自动提醒（不自动装，避免 sudo 静默提权）：
 
 ```sh
-git clone https://github.com/yidasanqian/dsh-intel-desktop.git
-cd dsh-intel-desktop
+git clone https://github.com/yidasanqian/dsh-mac-intel-desktop.git
+cd dsh-mac-intel-desktop
 ./updater/install-agent.sh          # 每天 19:00 检查，有新版弹通知
 ./updater/install-agent.sh --uninstall
 ```

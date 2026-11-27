@@ -1,8 +1,8 @@
-# dsh-intel-desktop
+# dsh-mac-intel-desktop
 
 [中文](README.md) | **English**
 
-x86_64 (Intel) macOS builds of the DSH desktop app, plus a lightweight updater.
+**DSH Mac Desktop · Intel (x86_64)** — x86_64 builds of the [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) (DSH) desktop app for Intel Macs, plus a lightweight updater.
 
 The upstream [deepseek-ai/deepseek-harness](https://github.com/deepseek-ai/deepseek-harness) publishes desktop builds for `macos-arm64` only; its download page tells Intel users the chip is not supported. This repo does exactly one thing: build the x86_64 DMG from upstream source tags on GitHub Actions' Intel runner, publish it here, and ship a small update script.
 
@@ -10,7 +10,7 @@ The upstream [deepseek-ai/deepseek-harness](https://github.com/deepseek-ai/deeps
 
 ## Install
 
-1. Grab `dsh-intel-latest.dmg` from [Releases](https://github.com/yidasanqian/dsh-intel-desktop/releases/latest)
+1. Grab `dsh-intel-latest.dmg` from [Releases](https://github.com/yidasanqian/dsh-mac-intel-desktop/releases/latest)
 2. Mount it and drag `DeepSeek Harness.app` into `/Applications`
 3. Strip the quarantine flag before the first launch (the bundle is ad-hoc signed, Gatekeeper blocks it otherwise):
 
@@ -32,7 +32,7 @@ The bundle is not signed with an Apple Developer certificate, so Electron's buil
 
 ```sh
 # check and install (interactive confirmation)
-curl -fsSL https://raw.githubusercontent.com/yidasanqian/dsh-intel-desktop/main/updater/dsh-intel-update.sh -o /tmp/dsh-intel-update.sh
+curl -fsSL https://raw.githubusercontent.com/yidasanqian/dsh-mac-intel-desktop/main/updater/dsh-intel-update.sh -o /tmp/dsh-intel-update.sh
 chmod +x /tmp/dsh-intel-update.sh && /tmp/dsh-intel-update.sh
 
 # check only, no download
@@ -44,8 +44,8 @@ What it does: reads `version.txt` from the latest release, compares it against `
 To get a daily reminder (notify only — no silent `sudo` installs):
 
 ```sh
-git clone https://github.com/yidasanqian/dsh-intel-desktop.git
-cd dsh-intel-desktop
+git clone https://github.com/yidasanqian/dsh-mac-intel-desktop.git
+cd dsh-mac-intel-desktop
 ./updater/install-agent.sh          # checks daily at 19:00, posts a notification when a new build exists
 ./updater/install-agent.sh --uninstall
 ```

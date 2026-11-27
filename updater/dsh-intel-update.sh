@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# dsh-intel-desktop 更新器（macOS Intel / 未签名构建专用）
+# dsh-mac-intel-desktop 更新器（Mac Intel / 未签名构建专用）
 #
 #   ./dsh-intel-update.sh            检查并安装最新版（交互确认）
 #   ./dsh-intel-update.sh --check    只检查，不下载
@@ -9,7 +9,7 @@
 # 退出码：0 已是最新或安装成功，10 有新版本（仅 --check），1 出错
 set -euo pipefail
 
-REPO="yidasanqian/dsh-intel-desktop"
+REPO="yidasanqian/dsh-mac-intel-desktop"
 APP_NAME="DeepSeek Harness"
 APP_PATH="/Applications/${APP_NAME}.app"
 BASE="https://github.com/${REPO}/releases/latest/download"
