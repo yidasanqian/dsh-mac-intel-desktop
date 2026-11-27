@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # 安装/卸载「每日检查更新」的 LaunchAgent。
 #
-#   ./install-agent.sh              安装（每天 10:00 检查一次）
+#   ./install-agent.sh              安装（每天 19:00 检查一次）
 #   ./install-agent.sh --uninstall  卸载
 set -euo pipefail
 
@@ -40,7 +40,7 @@ cat > "$PLIST" <<PLIST_EOF
   <key>StartCalendarInterval</key>
   <dict>
     <key>Hour</key>
-    <integer>10</integer>
+    <integer>19</integer>
     <key>Minute</key>
     <integer>0</integer>
   </dict>
@@ -58,5 +58,5 @@ launchctl bootout "gui/$(id -u)/${LABEL}" >/dev/null 2>&1 || true
 launchctl bootstrap "gui/$(id -u)" "$PLIST"
 launchctl enable "gui/$(id -u)/${LABEL}" >/dev/null 2>&1 || true
 
-echo "已安装 ${LABEL}，每天 10:00 检查一次"
+echo "已安装 ${LABEL}，每天 19:00 检查一次"
 echo "立即试跑一次：bash ${WATCH} && cat ${HOME}/.dsh-intel-desktop/state.env"

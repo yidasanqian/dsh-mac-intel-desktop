@@ -1,5 +1,7 @@
 # dsh-intel-desktop
 
+**中文** | [English](README.en.md)
+
 给 **Intel Mac**（x86_64）用的 DSH 桌面版构建与分发。
 
 上游 [deepseek-ai/deepseek-harness](https://github.com/deepseek-ai/deepseek-harness) 官方桌面版只发 `macos-arm64.dmg`，官网下载页对 Intel 机型直接提示「Intel 芯片暂不支持」。这个仓库做一件事：从上游源码 tag 在 GitHub Actions 的 Intel 机器上构建 x86_64 包，发布到这里，并配一个轻量更新器。
@@ -44,9 +46,11 @@ chmod +x /tmp/dsh-intel-update.sh && /tmp/dsh-intel-update.sh
 ```sh
 git clone https://github.com/yidasanqian/dsh-intel-desktop.git
 cd dsh-intel-desktop
-./updater/install-agent.sh          # 每天 10:00 检查，有新版弹通知
+./updater/install-agent.sh          # 每天 19:00 检查，有新版弹通知
 ./updater/install-agent.sh --uninstall
 ```
+
+已有旧版定时任务的话，重跑一次 `install-agent.sh` 就会覆盖成新时间。
 
 ## 版本策略
 
