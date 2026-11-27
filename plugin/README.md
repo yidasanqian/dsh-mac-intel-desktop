@@ -20,6 +20,8 @@ DSH 桌面版插件，给 [dsh-mac-intel-desktop](https://github.com/yidasanqian
 
 DSH → 插件 → 添加插件 → 选择本目录。装好后打开 **设置 → 通用**。
 
+只支持 **macOS Intel（darwin x64）**：`package.json` 里声明了 `os: ["darwin"]`、`cpu: ["x64"]`，host 半还会在运行时不匹配时把状态标成「仅 macOS Intel 桌面版可用」，不会执行任何写 `/Applications` 的操作。
+
 ## 安全边界
 
 - 四个路由只接受本机页面转发来的请求（回环 TCP 对端、回环 Host、无代理头、`sec-fetch-site` 为空或 `same-origin`）
