@@ -2,6 +2,8 @@ name: Build macOS Intel DMG
 
 # 从官方 deepseek-ai/deepseek-harness 的 tag 构建 macOS x86_64 桌面版，发布到本仓库 Release。
 # 产物未签名、未公证（ad-hoc 签名），只提供 dmg，不含 Electron 自动更新通道。
+#
+# 只由手动触发或 sync.yml 派发，push 不触发。
 
 on:
   workflow_dispatch:
@@ -10,9 +12,6 @@ on:
         description: '上游源码 ref；留空则自动取最新 dsh-v* tag'
         required: false
         default: ''
-  schedule:
-    # 每天 20:00 UTC / 次日 04:00 北京时间，检查上游是否有新 tag
-    - cron: '0 20 * * *'
 
 permissions:
   contents: write
@@ -124,6 +123,7 @@ jobs:
         env:
           UPSTREAM_REF: ${{ needs.resolve.outputs.ref }}
           UPSTREAM_SHA: ${{ needs.resolve.outputs.sha }}
+          UPSTREAM_VERSION: ${{ needs.resolve.outputs.version }}
         run: |
           set -euo pipefail
           dmg=$(find src -type f -name '*.dmg' -not -path '*/node_modules/*' | head -n 1)
@@ -134,7 +134,11 @@ jobs:
             echo "源码 commit 与解析结果不一致：${built_sha} != ${UPSTREAM_SHA}"; exit 1; }
           mkdir -p out
           cp "$dmg" out/dsh-mac-intel-latest.dmg
-          version=$(node -p "require('./src/package.json').version")
+          # Release tag 用 resolve 的版本号（和 sync.yml 的跳过判断同源），package.json 必须一致
+          version="$UPSTREAM_VERSION"
+          pkg_version=$(node -p "require('./src/package.json').version")
+          test "$pkg_version" = "$version" || {
+            echo "package.json 版本 ${pkg_version} 与上游 tag 版本 ${version} 不一致"; exit 1; }
           printf '%s\n' "$version" > out/version.txt
           {
             echo "upstream_repo=${UPSTREAM_REPO}"
@@ -150,7 +154,7 @@ jobs:
       - name: 发布 Release
         env:
           GH_TOKEN: ${{ github.token }}
-          VERSION: ${{ steps.stage.outputs.version }}
+          VERSION: ${{ needs.resolve.outputs.version }}
           UPSTREAM_REF: ${{ needs.resolve.outputs.ref }}
           UPSTREAM_SHA: ${{ needs.resolve.outputs.sha }}
         run: |

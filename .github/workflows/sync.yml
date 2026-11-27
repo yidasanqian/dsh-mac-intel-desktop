@@ -1,0 +1,69 @@
+name: Sync upstream release
+
+# 轻量轮询：只查上游有没有新 tag，有就触发 Build macOS Intel DMG。
+# 目的是让昂贵的 Intel runner 只在真有新版本时启动，日常检查不碰 macOS runner。
+# 也保证 Build 工作流只有 workflow_dispatch 一个入口——push 永远不会触发构建。
+
+on:
+  schedule:
+    # 每 2 小时一次（UTC 分钟偏移错开整点，GitHub cron 在整点最拥挤）
+    - cron: '17 */2 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: write
+
+concurrency:
+  group: sync-upstream
+  cancel-in-progress: true
+
+env:
+  UPSTREAM_REPO: deepseek-ai/deepseek-harness
+
+jobs:
+  check:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: 解析上游最新版本
+        id: pick
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          ref=$(gh api "repos/${UPSTREAM_REPO}/releases?per_page=30" \
+            --jq '[.[] | select(.tag_name | startswith("dsh-v"))][0].tag_name')
+          test -n "$ref" || { echo '未能解析上游 tag'; exit 1; }
+          version="${ref#dsh-v}"
+          echo "ref=$ref" >> "$GITHUB_OUTPUT"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "上游最新：$ref"
+
+          if gh release view "intel-v${version}" --repo "${{ github.repository }}" >/dev/null 2>&1; then
+            echo "intel-v${version} 已发布，无需构建"
+            echo "need=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          # 已有构建在跑或排队时不再派发，避免堆积（build.yml 的 resolve 也会二次兜底）
+          busy=$(gh run list --repo "${{ github.repository }}" --workflow=build.yml --limit 10 \
+            --json status --jq '[.[] | select(.status == "in_progress" or .status == "queued")] | length')
+          if [ "$busy" -gt 0 ]; then
+            echo "已有 ${busy} 个构建在跑或排队，本次不派发"
+            echo "need=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          echo "need=true" >> "$GITHUB_OUTPUT"
+
+      - name: 触发构建
+        if: steps.pick.outputs.need == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          gh workflow run build.yml \
+            --repo "${{ github.repository }}" \
+            --ref main \
+            -f "source_ref=${{ steps.pick.outputs.ref }}"
+          echo "已派发构建：${{ steps.pick.outputs.ref }}"

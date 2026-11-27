@@ -57,10 +57,10 @@ Already running an older schedule? Re-run `install-agent.sh` and it overwrites t
 ## Versioning
 
 - Follows upstream `dsh-v*` tags, including `-rc` / `-alpha` prereleases (that is all upstream ships today)
-- Checks upstream for new tags daily at 20:00 UTC, then builds and publishes `intel-v<version>`
+- [sync.yml](.github/workflows/sync.yml) polls upstream every 2 hours and dispatches [build.yml](.github/workflows/build.yml) when an unpublished version shows up. The expensive Intel runner only spins on real releases; pushes never trigger a build
 - `version.txt` in each release is the upstream `package.json` version, identical to the app's `CFBundleShortVersionString`
 - Each release ships `source.txt`: upstream repo, tag, resolved commit SHA, and the build run URL. The tag name tracks upstream, but the git tag itself points at this repo — upstream history is never imported
-- Expect a 1–2 hour lag between an upstream release and the build appearing here
+- Expect a 1–4 hour lag between an upstream release and the build appearing here (poll interval + build time)
 
 ## Building
 
