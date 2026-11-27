@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "Mac Intel 更新渠道",
+    "description": "在 设置 → 通用 里新增「更新渠道」：固定跟随 dsh-mac-intel-desktop 的最新 Release，可在行内选择「最新构建」或「仅正式版」，检查新版本、下载并校验 SHA256，再经 macOS 管理员授权退出应用、替换 /Applications 里的 bundle 并重启。给没有 Electron 内置更新通道的未签名 Intel 构建用。"
+  }
+}

@@ -43,6 +43,18 @@ What it does: reads `version.txt` from the latest release, compares it against `
 
 The artifact name follows the repo: `dsh-mac-intel-latest.dmg`. Releases published before the repo rename use `dsh-intel-latest.dmg`; the script falls back to it automatically.
 
+### Desktop plugin (recommended)
+
+If you would rather not use a terminal, this repo ships a DSH plugin that puts the updater in **Settings → General**:
+
+- Location: [`plugin/`](plugin/) (a DSH bundle with a host and a client half)
+- Install: DSH → Plugins → Add plugin → pick the `plugin` directory. A row named **Update channel · Mac Intel** then appears under **Settings → General**
+- Behavior: follows the newest build in this repo by default, including upstream `rc` / `alpha`; the row's dropdown can switch to **Stable only** to skip prereleases (upstream has not shipped a stable release yet, so that choice shows "No stable release yet"). **Check for updates** compares the app's `CFBundleShortVersionString`; when a newer build exists, **Download update** fetches the DMG and verifies it against `SHA256SUMS.txt`, and **Install and restart** asks for macOS administrator approval, quits the app, replaces the bundle in `/Applications`, clears quarantine, and relaunches
+- Downloads and logs live in `~/.dsh/dsh-mac-intel-update/`; the last install result is `last-install.json` and is shown in the row after the restart
+- It reads the same releases as the script below; installing it changes nothing about the script
+
+Installation still requires administrator approval because it writes to `/Applications`; the plugin does not bypass the system prompt.
+
 To get a daily reminder (notify only — no silent `sudo` installs):
 
 ```sh
@@ -80,7 +92,7 @@ To build a specific version: Actions → Build macOS Intel DMG → Run workflow,
 ## Known limitations
 
 - **Unsigned and un-notarized.** Every build gets a different ad-hoc signature. Corporate MDM setups may refuse to run it outright.
-- **No Electron auto-update** — only the script above, and it needs `sudo` to write `/Applications`.
+- **No Electron auto-update** — use the plugin or the script above; writing `/Applications` still needs administrator approval.
 - Builds take 45–90 minutes. The Intel runner has 14 GB of disk; if upstream keeps growing, builds will fail (the workflow logs disk usage, check the log).
 - DMG only — no zip, no delta updates.
 - Upstream is a developer preview. Compatibility breaks, and plugins may stop working across versions.

@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "Mac Intel update channel",
+    "description": "Adds an Update channel row under Settings → General that follows the newest dsh-mac-intel-desktop release, lets the row choose Latest build or Stable only, checks for a new version, downloads and verifies its SHA256, then asks for macOS administrator approval to quit the app, replace the bundle in /Applications, and relaunch. Intended for the unsigned Intel build, which has no built-in Electron update feed."
+  }
+}

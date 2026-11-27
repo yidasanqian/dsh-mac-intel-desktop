@@ -43,6 +43,18 @@ chmod +x /tmp/dsh-mac-intel-update.sh && /tmp/dsh-mac-intel-update.sh
 
 产物名跟随仓库：`dsh-mac-intel-latest.dmg`。仓库改名之前发布的旧 Release 里叫 `dsh-intel-latest.dmg`，脚本会自动兜底，不用手动处理。
 
+### 桌面端插件（推荐）
+
+不想开终端的话，这个仓库带一个 DSH 插件，把更新入口放进 **设置 → 通用**：
+
+- 位置：[`plugin/`](plugin/)（DSH bundle，host + client 两半）
+- 安装：DSH → 插件 → 添加插件 → 选择仓库里的 `plugin` 目录。装好后 **设置 → 通用** 会出现「更新渠道 · Mac Intel」一行
+- 行为：默认跟随本仓库最新构建（含上游 `rc` / `alpha`），行内下拉可切到「仅正式版」跳过预发布（当前上游还没发正式版，选中会显示「正式版暂无发布」）；「检查更新」比对 app 的 `CFBundleShortVersionString`，有新版本时「下载更新」拉 dmg 并按 `SHA256SUMS.txt` 校验，「安装并重启」弹 macOS 管理员授权，退出应用、替换 `/Applications` 里的 bundle、清 quarantine、自动重启
+- 下载缓存和日志在 `~/.dsh/dsh-mac-intel-update/`，上次安装结果写在 `last-install.json`，重启后界面会显示回执
+- 它和下面的脚本读同一个 Release，装不装插件互不影响；插件只是图形化入口
+
+注意：安装仍然需要管理员授权（写 `/Applications`），插件不会绕过系统弹窗。
+
 想让它每天自动提醒（不自动装，避免 sudo 静默提权）：
 
 ```sh
@@ -80,7 +92,7 @@ macos-15-intel runner
 ## 已知限制
 
 - **未签名、未公证**。每次构建 ad-hoc 签名都不同。企业 MDM 环境可能直接拒绝运行。
-- **没有 Electron 自动更新**，只有上面那个脚本，需要 sudo 才能写 `/Applications`。
+- **没有 Electron 自动更新**：用上面的插件或脚本，写 `/Applications` 仍需要管理员授权。
 - 每次构建约 45–90 分钟，Intel runner 只有 14 GB 磁盘，上游体积再涨可能构建失败（工作流里有磁盘探针，失败时看日志）。
 - 只出 dmg，没有 zip，也没有增量更新。
 - 上游是 developer preview，兼容性会断，插件可能随版本失效。

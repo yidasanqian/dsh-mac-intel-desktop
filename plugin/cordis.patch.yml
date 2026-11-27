@@ -1,0 +1,9 @@
+# dsh-mac-intel-update bundle patch —— 只挂载 host 半。
+#
+# client 半经 package.json 的 dsh.client 清单被 client-modules 扫描发现，
+# 不需要在这里登记。host 半注册 /dsh-mac-intel-update/api/* 路由，负责
+# 检查 Release、下载校验和交给管理员权限的安装脚本。
+- insert:
+    - id: dsh-mac-intel-update
+      name: dsh-mac-intel-update
+      config: {}

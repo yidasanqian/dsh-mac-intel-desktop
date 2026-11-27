@@ -1,0 +1,63 @@
+{
+  "name": "dsh-mac-intel-update",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "DSH Mac Intel 桌面版的更新渠道与一键更新：设置 → 通用 里的一行，检查 Release、下载校验、经管理员授权替换并重启应用。",
+  "keywords": [
+    "dsh",
+    "dsh-plugin",
+    "deepseek-harness",
+    "desktop",
+    "macos",
+    "intel",
+    "updater"
+  ],
+  "exports": {
+    ".": "./index.js",
+    "./client": "./client.js",
+    "./locale/*.json": "./locale/*.json",
+    "./icon": "./icon.svg"
+  },
+  "files": [
+    "index.js",
+    "client.js",
+    "cordis.patch.yml",
+    "installer.sh",
+    "locale/*.json",
+    "icon.svg",
+    "README.md"
+  ],
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "immediately": true,
+      "inject": [
+        "@deepseek-ai/dsh-client-ui-settings-general"
+      ]
+    }
+  },
+  "engines": {
+    "dsh": ">=0.2.0"
+  },
+  "license": "MIT",
+  "author": "yidasanqian",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yidasanqian/dsh-mac-intel-desktop.git",
+    "directory": "plugin"
+  },
+  "homepage": "https://github.com/yidasanqian/dsh-mac-intel-desktop/tree/main/plugin",
+  "bugs": {
+    "url": "https://github.com/yidasanqian/dsh-mac-intel-desktop/issues"
+  },
+  "os": [
+    "darwin"
+  ],
+  "cpu": [
+    "x64"
+  ]
+}
